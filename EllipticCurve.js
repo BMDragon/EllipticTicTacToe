@@ -7,12 +7,18 @@ class EllipticCurve {
         this.b = b % p;
         this.c = c % p;
         this.p = p;
+        this.initPoints();
     }
 
+    // Returns whether the inputed parameters for the curve
+    // reduces to a singular curve, meaning the group structure
+    // is not preserved
     isSingular() {
-        return (4 * b * b * b + 27 * c * c) % p === 0;
+        return (4 * this.b * this.b * this.b + 27 * this.c * this.c) % this.p === 0;
     }
 
+    // Method for adding two points on the elliptic curve
+    // Returns an x-coordinate and y-coordinate
     add(pointA, pointB) {
         x1 = pointA[0];
         y1 = pointA[1];
@@ -23,33 +29,38 @@ class EllipticCurve {
             if (2 * y1 === 0) {
                 return [Infinity, Infinity];
             }
-            slope = ((3 * x1 * x1 + b) * modularInverse(2 * y1, p)) % p;
+            slope = ((3 * x1 * x1 + this.b) * this.modularInverse(2 * y1, this.p)) % this.p;
         }
         else {
             if (x1 === x2) {
                 return [Infinity, Infinity];
             }
-            slope = ((y2 - y1) * modularInverse(x2 - x1, p)) % p;
+            slope = ((y2 - y1) * this.modularInverse(x2 - x1, this.p)) % this.p;
         }
-        x3 = (slope * slope - x1 - x2) % p;
-        y3 = (slope * (x1 - x3) - y1) % p;
+        x3 = (slope * slope - x1 - x2) % this.p;
+        y3 = (slope * (x1 - x3) - y1) % this.p;
         return {x3: x3, y3: y3};
     }
 
-    extendedEuclideanAlgorithm(a, b) {
+    // Extended Euclidean Algorithm used to find the modular inverse
+    extendedEuclid(a, b) {
         if (a === 0) {
             return { gcd: b, x: 0, y: 1 };
         }
-        ({ gcd, x: x1, y: y1 }) = extendedEuclideanAlgorithm(b % a, a);
+        ({ gcd, x: x1, y: y1 }) = this.extendedEuclid(b % a, a);
         return { gcd: gcd, x: y1 - Math.floor(b / a) * x1, y: x1 };
     }
 
+    // Finds a^-1 (mod m)
     modularInverse(a, m) {
-        ({ gcd, x }) = extendedEuclideanAlgorithm(a, m);
+        ({ gcd, x }) = this.extendedEuclid(a, m);
         if (gcd !== 1) {
             throw new Error("Modular inverse does not exist.");
         }
         result = (x % m + m) % m;
         return result;
     }
+
+    // Method to initiate all points along the elliptic curve
+    initPoints()
 }
